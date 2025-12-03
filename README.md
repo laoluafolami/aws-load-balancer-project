@@ -99,7 +99,27 @@ Launch **two** EC2 instances using the **Ubuntu 22.04 LTS AMI**:
   - **Inbound Rules**:
     - HTTP (Port 80) → Source: `0.0.0.0/0`
     - SSH (Port 22) → Your IP (or `0.0.0.0/0` for testing)
+- Paste the script below in the data field of the EC2 instance under "Additional settings" to install Apache2 and update the server:
+```
+  #!/bin/bash
+# Update system packages
+apt-get update -y
 
+# Install Apache2
+apt-get install -y apache2
+
+# Ensure Apache starts on boot
+systemctl enable apache2
+systemctl start apache2
+
+# Ensure /var/www/html exists and has correct ownership
+mkdir -p /var/www/html
+chown -R www-www-data /var/www/html
+chmod -R 755 /var/www/html
+
+# Optional: Create a simple test page
+echo "<h1>Apache2 is running!</h1><p>Instance provisioned automatically.</p>" > /var/www/html/index.html
+```
 > 📸 *Insert EC2 launch settings showing Ubuntu AMI and subnet selection*
 
 ---
