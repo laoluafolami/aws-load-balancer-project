@@ -1,4 +1,4 @@
-# 🛒 Load-Balanced E-Commerce Website on AWS (Using Diagram IPs)
+# 🛒 Load-Balanced E-Commerce Website on AWS (Using AWS Load Balancer)
 
 This project demonstrates how to deploy a highly available e-commerce website using **Amazon Web Services (AWS)**. It uses **two EC2 instances**, an **Application Load Balancer (ALB)**, and a custom **VPC with public subnets** — configured exactly as shown in the architecture diagram.
 
@@ -9,7 +9,7 @@ This project demonstrates how to deploy a highly available e-commerce website us
 ## 🎯 Project Goal
 - Deploy a simple e-commerce website on two EC2 instances.
 - Distribute incoming web traffic across both instances using an Application Load Balancer.
-- Build a secure and scalable network architecture using VPC, subnets, and an Internet Gateway — **matching the provided diagram**.
+- Build a secure and scalable network architecture using VPC, subnets, and an Internet Gateway.
 
 ---
 
@@ -31,7 +31,7 @@ This project demonstrates how to deploy a highly available e-commerce website us
 
 ## 🚀 Step-by-Step Implementation
 
-### 1. **Create a Custom VPC (Matching Diagram)**
+### 1. **Create a Custom VPC **
 - Go to **VPC Dashboard → Your VPCs → Create VPC**
   - Name: `ecommerce-vpc`
   - IPv4 CIDR: `12.0.0.0/16` 
@@ -41,7 +41,7 @@ This project demonstrates how to deploy a highly available e-commerce website us
 
 ---
 
-### 2. **Create Two Public Subnets (As Per Diagram)**
+### 2. **Create Two Public Subnets **
 - **Subnet 1**:
   - Name: `public-subnet-1a`
   - VPC: `ecommerce-vpc`
@@ -50,7 +50,7 @@ This project demonstrates how to deploy a highly available e-commerce website us
 - **Subnet 2**:
   - Name: `public-subnet-2b`
   - AZ: `us-east-2b`
-  - CIDR: `12.0.3.0/24` ← **Matches diagram**
+  - CIDR: `12.0.3.0/24` 
 
 <img width="1100" height="756" alt="image" src="https://github.com/user-attachments/assets/901dbcb2-7b67-4320-89b5-b649e54b7a11" />
 <img width="1096" height="675" alt="image" src="https://github.com/user-attachments/assets/14c93074-8352-4522-bdd9-b572bec8978f" />
