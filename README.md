@@ -93,7 +93,7 @@ Launch **two** EC2 instances using the **Ubuntu 22.04 LTS AMI**:
 - **Network**: `ecommerce-vpc`
 - **Subnet**:
   - Instance 1 → `public-subnet-1a` (`12.0.1.0/24`)
-  - Instance 2 → `public-subnet-1b` (`12.0.3.0/24`)
+  - Instance 2 → `public-subnet-2b` (`12.0.3.0/24`)
 - **Auto-assign public IP**: ✅ Enable
 - **Security Group**: Create new `web-sg` with:
   - **Inbound Rules**:
@@ -114,19 +114,138 @@ systemctl start apache2
 
 # Ensure /var/www/html exists and has correct ownership
 mkdir -p /var/www/html
-chown -R www-www-data /var/www/html
 chmod -R 755 /var/www/html
 
 # Optional: Create a simple test page
-echo "<h1>Apache2 is running!</h1><p>Instance provisioned automatically.</p>" > /var/www/html/index.html
+echo "<h1>Apache2 is running on Server1</h1><p>Instance provisioned automatically on Server1.</p>" > /var/www/html/index.html
 ```
-> 📸 *Insert EC2 launch settings showing Ubuntu AMI and subnet selection*
+<img width="917" height="746" alt="image" src="https://github.com/user-attachments/assets/564253e4-7b1d-4974-89fc-4cd265113d88" />
+<img width="901" height="618" alt="image" src="https://github.com/user-attachments/assets/25756a6e-7cbc-44c0-b473-6f966111ab85" />
+<img width="898" height="671" alt="image" src="https://github.com/user-attachments/assets/c5ae11ad-877f-471a-b6e3-880e2a6ffacf" />
+<img width="1398" height="400" alt="image" src="https://github.com/user-attachments/assets/d903c5d5-9970-4b9a-a287-d4c4c6e83ca9" />
+
+<img width="1687" height="194" alt="image" src="https://github.com/user-attachments/assets/169b0ad3-2c1b-4308-8837-e6c93a5a26b8" />
+
 
 ---
+## Repeat step 5 to create the second EC2 instance 
+- In the echo section of the script, change the h1 tag to Apache2 is running on Server2 to distinguish the servers.
+---
+**6. Create an Application Load Balancer (ALB)**
 
-### 6. **Deploy Your Website Files on Ubuntu**
+- Go to EC2 → Load Balancers → Create Load Balancer
+- Choose Application Load Balancer
+- Name: `ecommerce-alb`
+- Scheme: `Internet-facing`
+- IP address type: `IPv4`
+- Listeners: `HTTP (Port 80)`
+- Availability Zones: Select your VPC and both `public subnets (12.0.1.0/24 and 12.0.3.0/24)`
+- Security Group: Create or select `alb-sg` allowing HTTP from `0.0.0.0/0`
+- Target Group:
+- Create new: `ecommerce-tg`
+- Protocol: `HTTP`, `Port: 80`, Health check path: `/`
+- Register both Ubuntu EC2 instances by selecting them and click `Include as pending below.`
+- Review and Create
+<img width="1229" height="757" alt="image" src="https://github.com/user-attachments/assets/e7f344e9-23cc-422c-a43a-5d5c958d5fc3" />
+<img width="1372" height="669" alt="image" src="https://github.com/user-attachments/assets/2b791c8e-48b8-444a-a5a1-ae74eece8128" />
+<img width="911" height="666" alt="image" src="https://github.com/user-attachments/assets/845a2c8d-76e3-4ba7-94ad-01e3266c7c0b" />
+<img width="1314" height="343" alt="image" src="https://github.com/user-attachments/assets/90b723e2-bb47-4de3-9083-ec17ecab798f" />
+<img width="1143" height="489" alt="image" src="https://github.com/user-attachments/assets/72fe5e02-d57d-4303-9e12-fc7398296e28" />
+<img width="1634" height="734" alt="image" src="https://github.com/user-attachments/assets/faae6c52-7e25-495f-9edf-7e5cab0c2ca9" />
+<img width="1458" height="675" alt="image" src="https://github.com/user-attachments/assets/54e105c1-a617-42b9-bb9b-bec963c06c27" />
 
-After launching, **SSH into each EC2 instance** using your `.pem` key:
+---
+**7. Test the Load Balancer**
 
-```bash
-ssh -i "your-key.pem" ubuntu@<public-ip>
+- Wait 2–5 minutes for the ALB to become active
+- Copy the DNS name of your ALB from the AWS console
+- Open in browser: `http://<your-alb-dns-name>`
+- Refresh multiple times — you should see alternating messages:
+- “Server 1 (Subnet: 12.0.1.0/24)”
+- “Server 2 (Subnet: 12.0.3.0/24)”
+- Confirm both instances show Healthy in Target Groups
+<img width="1402" height="401" alt="image" src="https://github.com/user-attachments/assets/838644ac-9041-4460-803a-2ab0f767508e" />
+
+<img width="1106" height="461" alt="image" src="https://github.com/user-attachments/assets/22d98c2f-7b43-439c-9ccf-f6fe9e01322c" />
+
+---
+### 8. **Deploy Your Website Files on Ubuntu**
+**Upload your website files (e-commerce web files)**
+To upload you website files:
+
+**🔹 Step 1: Open Git Bash in Your Website Folder**
+✅ Open your terminal and navigate to your project folder.
+
+```
+C:\Users\laolu\Documents\Realprojects\AWS projects\ALB-ecommerce\Electro
+```
+ **🔹 Step 2: Set Secure Permissions on Your Key**
+
+```
+chmod 400 test-ALB-demo.pem
+```
+**🔹 Step 3: Copy Files to Server 1 (3.139.70.220)**
+✅ Run this command (all on one line):
+
+```
+scp -i test-ALB-demo.pem -r Electro/* ubuntu@3.139.70.220:/tmp/
+```
+**🔹 Step 4: Move Files into Web Folder on Server 1**
+✅ Now log in to Server 1:
+
+```
+ssh -i test-ALB-demo.pem ubuntu@3.139.70.220
+```
+✅ Once logged in, run these 3 commands (copy/paste one at a time):
+
+```
+# 1. Delete default Apache files
+sudo rm -rf /var/www/html/*
+```
+
+```
+# 2. Move your files from /tmp to the web folder
+sudo mv /tmp/* /var/www/html/
+```
+**🔹 Step 5: Copy Files to Server 2 (18.217.149.70)**
+✅ Run this command (all on one line):
+
+```
+scp -i test-ALB-demo.pem -r Electro/* ubuntu@18.217.149.70:/tmp/
+```
+✅ Wait for the files to finish copying.
+
+```
+🔹 Step 6: Move Files into Web Folder on Server 2
+```
+✅ Log in to Server 2:
+
+```
+ssh -i test-ALB-demo.pem ubuntu@18.217.149.70
+```
+✅ Run the same 3 commands:
+
+```
+sudo rm -rf /var/www/html/*
+sudo mv /tmp/* /var/www/html/
+exit
+
+```
+✅ Done! 🎉
+Your entire E-commerce website is now live on both servers.
+
+🔍 Test It Out
+- Open your browser and go to:
+- ➤ `http://3.139.70.220` → should show your real website
+- ➤ `http://18.217.149.70` → same website
+
+- From your Load Balancer, visit its DNS name and refresh — you should see the same site served from both servers.
+- Load Balancer DNS: `http://ecommerce-alb-178280318.us-east-2.elb.amazonaws.com/`
+
+<img width="1649" height="967" alt="image" src="https://github.com/user-attachments/assets/cc9412ec-41f2-4647-803e-78f6b2a5ef4c" />
+<img width="1659" height="814" alt="image" src="https://github.com/user-attachments/assets/229083e8-2341-431b-9748-bc42c759a7c9" />
+<img width="1638" height="532" alt="image" src="https://github.com/user-attachments/assets/23bb884e-0600-421c-961d-ee0e7bbaaa08" />
+<img width="1651" height="505" alt="image" src="https://github.com/user-attachments/assets/b2043638-b539-4b83-9a8a-a17c1615013a" />
+<img width="1620" height="782" alt="image" src="https://github.com/user-attachments/assets/cb802dc9-d8f5-42ff-b5bc-339af3f5612f" />
+
+
